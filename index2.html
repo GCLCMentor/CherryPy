@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <title>Google Sign-In Test</title>
+    <meta name="google-signin-client_id" content="601000236537-8luk6rtn58ln5lfqd4oaluqlirtma3j0.apps.googleusercontent.com">
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script>
+
+        function initClient() {
+            gapi.client.init({
+                clientId: '601000236537-8luk6rtn58ln5lfqd4oaluqlirtma3j0.apps.googleusercontent.com',
+                scope: 'profile email' // Request the profile and email scopes
+            }).then(() => {
+                // Listen for sign-in state changes.
+                gapi.auth2.getAuthInstance().isSignedIn.listen(updateSigninStatus);
+
+                // Handle initial sign-in state. (Determine if a user is already signed in.)
+                updateSigninStatus(gapi.auth2.getAuthInstance().isSignedIn.get());
+
+                // Render the button with a custom ID
+                gapi.signin2.render('g-signin2', {
+                    'scope': 'profile email',
+                    'width': 200, // Adjust width as needed
+                    'height': 50,  // Adjust height as needed
+                    'longtitle': true,
+                    'theme': 'dark', // or 'light'
+                    'onsuccess': onSignIn,
+                    'onfailure': onFailure // Add an onFailure handler
+                });
+            });
+        }
+
+
+        function onFailure(error) {
+            console.log(error); // Log the error for debugging
+            alert('There was an error signing in. Please try again later.'); // Display an error message to the user
+        }
+
+
+        function updateSigninStatus(isSignedIn) {
+            if (isSignedIn) {
+                let user = gapi.auth2.getAuthInstance().currentUser.get();
+                var profile = user.getBasicProfile();
+                document.getElementById("student-name").value = profile.getName();
+                document.getElementById("student-name-display").innerText = `Welcome, ${profile.getName()}!`;
+                console.log('ID: ' + profile.getId());
+                console.log('Name: ' + profile.getName());
+                console.log('Image URL: ' + profile.getImageUrl());
+                console.log('Email: ' + profile.getEmail());
+            } else {
+                // Clear the student name fields if the user signs out
+                // Populate the Student Name field
+                document.getElementById("student-name").value = userName;
+
+                // Display the Student Name in the div
+                document.getElementById("student-name-display").innerText = `Welcome, ${userName}!`;
+            }
+        }
+    </script>
+</head>
+
+<body>
+    <div class="g-signin2" data-onsuccess="onSignIn"></div>
+    <div id="student-name-display" style="color: black; font-size: 18px; margin: 10px 0;"></div>
+</body>
+</html>

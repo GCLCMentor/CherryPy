@@ -1,0 +1,11 @@
+# Archivos de caché y logs
+error_log
+
+# Archivos subidos por los usuarios
+/python_exercises/
+
+# Carpetas específicas
+/old/
+
+# Archivos empaquetados
+*.zip
