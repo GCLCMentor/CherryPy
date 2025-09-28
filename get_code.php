@@ -1,14 +1,16 @@
 <?php
 header('Content-Type: text/plain');
 
-$saveDir = 'python_exercises'; // Directory to save the code files
+$mainDir = 'python_exercises'; // Directory to save the code files
 $filename = $_GET['file'];
 
-$filepath = $saveDir . '/' . $filename;
+$mainFilePath = $mainDir . '/' . $filename;
 
-if (file_exists($filepath)) {
-    echo file_get_contents($filepath);
+if (file_exists($mainFilePath)) {
+    echo file_get_contents($mainFilePath);
 } else {
+    // Devuelve un error HTTP 404 para ser más estándar.
+    header("HTTP/1.0 404 Not Found");
     echo "File not found.";
 }
-?><?php
+?>

@@ -230,8 +230,8 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
 
                     
                     <button style="font-size: x-small; margin-left:30px !important; height:35px; align-self:end; margin-bottom: 2px" type="button" class="save" onclick="saveCode()"> <span style='font-size:15px;'>&#9112;</span> Save</button>
-                    <button style="font-size: x-small; margin-left:10px; height:35px; align-self:end; margin-bottom: 2px" type="button" class="download" onclick="downloadFile()"> <span style='font-size:15px;'>&#8628;</span> Download .py</button>
-                    <button style="font-size: x-small; margin-left:10px; height:35px; align-self:end; margin-bottom: 2px" type="button" class="share" onclick="shareURL()"> <span style='font-size:15px;'>&#8644;</span> Share URL</button>
+                    <button id="download-button" style="font-size: x-small; margin-left:10px; height:35px; align-self:end; margin-bottom: 2px" type="button" class="download" onclick="downloadFile()"> <span style='font-size:15px;'>&#8628;</span> Download .py</button>
+                    <button id="share-button" style="font-size: x-small; margin-left:10px; height:35px; align-self:end; margin-bottom: 2px" type="button" class="share" onclick="shareURL()"> <span style='font-size:15px;'>&#8644;</span> Share URL</button>
                 </div>
             </div>
             </div>
@@ -249,6 +249,9 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
         const drag = document.getElementById('drag');
         const output = document.getElementById('output');
         const turtleCanvas = document.getElementById('turtle-canvas');
+        // --- ¡NUEVO! Variable global para el nombre de archivo válido ---
+        let currentFilename = null;
+        let isCodeSaved = false; // <-- Rastrea si el código actual está guardado o no.
 
         let isDragging = false;
 
@@ -284,7 +287,15 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
             inputStyle: "textarea",
             cursorBlinkRate: 300,
             autocorrect: true,
+            matchBrackets: true,
             closeBrackets: true
+        });
+
+        // Se activa cada vez que el código en el editor es modificado.
+        editor.on('change', function() {
+            // Si el estado era "guardado", lo cambia a "no guardado"
+            // y deshabilita los botones.
+            isCodeSaved = false;
         });
 
         // Check if it's a new session
@@ -361,7 +372,7 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
 
             myPromise.then(
                 (mod) => {
-                    console.log("Execution successful");
+                    console.log("Execution successful.");
                     isRunning = false; // Reset the flag,
                 },
                 (err) => {
@@ -438,12 +449,10 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
             const cleanCourseName = cleanString(courseName);
             const cleanExerciseName = cleanString(exerciseName);
 
-            // Generar la fecha en formato mmddaaaa_HHMMSS
-            const now = new Date();
-            const formattedDate = `${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}${now.getFullYear()}-${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
-
-            // Generar el nombre del archivo
-            filename = `${cleanCourseName}_${cleanStudentName}_${cleanExerciseName}_${formattedDate}.py`;
+            // --- ¡CAMBIO PRINCIPAL AQUÍ! ---
+            // Generamos el nombre de archivo ESTABLE, sin el timestamp.
+            // Este será el nombre del archivo "maestro".
+            const filename = `${cleanCourseName}_${cleanStudentName}_${cleanExerciseName}.py`;
 
             // Guardar en el servidor
             fetch('save_code.php', {
@@ -465,6 +474,18 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                         alert('Error saving file on server: ' + data.error);
                     } else {
                         alert(`File saved on server successfully!\nNamed as: ${filename}.`);
+
+                        // --- LÓGICA AÑADIDA ---
+                        currentFilename = filename; // Guardamos el nombre válido
+                        document.getElementById('download-button').disabled = false; // Habilitamos el botón
+                        document.getElementById('share-button').disabled = false; // Habilitamos el botón
+                        isCodeSaved = true; // <-- Valida que el código ha sido guardado.
+
+                        // --- MEJORA DE USABILIDAD ---
+                        // Actualizamos la URL del navegador para que refleje el archivo guardado,
+                        // sin necesidad de recargar la página.
+                        const newUrl = `${window.location.protocol}//${window.location.host}${window.location.pathname}?file=${encodeURIComponent(filename)}`;
+                        window.history.pushState({ path: newUrl }, '', newUrl);
                     }
 
                 /*.then(data => {
@@ -493,12 +514,23 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
         }
 
         function downloadFile() {
+            if (!currentFilename) {
+                alert("You must SAVE the file first before downloading.");
+                return;
+            }
+
+            // Verificamos si el código ha sido guaradado primero.
+            if (!isCodeSaved) {
+                alert("Changes have been made to your code. You must SAVE these changes on the server before downloading the file.");
+                return; // Detenemos la función aquí
+            }
+
             const code = editor.getValue(); // Get the code from the editor
             const blob = new Blob([code], {type: 'text/python' }); // Create a Blob from the code
             const url = URL.createObjectURL(blob); // Create a URL for the Blob
             const a = document.createElement('a'); // Create a temporary anchor element
             a.href = url; // Set the URL as the href
-            a.download = filename; // Set the file name
+            a.download = currentFilename; // Set the file name
             document.body.appendChild(a); // Append the anchor to the body
             a.click(); // Programmatically click the anchor to trigger the download
             document.body.removeChild(a); // Remove the anchor from the document
@@ -519,6 +551,17 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
         }*/
 
         function shareURL() {
+            if (!currentFilename) {
+                alert("You must SAVE the file first before sharing.");
+                return;
+            }
+
+            // Verificamos si el código ha sido guaradado primero.
+            if (!isCodeSaved) {
+                alert("Changes have been made to your code. You must SAVE these changes on the server before share the file.");
+                return; // Detenemos la función aquí
+            }
+
             // Assuming the filename is already saved on the server
             /*fetch(`/get_code.php?file=${encodeURIComponent(filename)}`, {
                 method: 'GET'
@@ -538,41 +581,52 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                     console.error('Error:', error);
                     alert('Error sharing code.');
                 });*/
-                const currentURL = window.location.origin.toString(); // Get the full URL of the current page
+
+                /*const currentURL = window.location.origin.toString(); // Get the full URL of the current page
                 console.log(currentURL); // Log the URL to the console
 
                 // Crear URL segura con encodeURIComponent
-                urlTemp = `${currentURL}/cherrytools/cherrypy/index.php?file=${encodeURIComponent(filename)}`;
+                urlTemp = `${currentURL}/cherrytools/cherrypy/index.php?file=${encodeURIComponent(filename)}`;*/
 
-                navigator.clipboard.writeText(urlTemp)
+            // Construye la URL usando la variable global, que es la fuente confiable del nombre del archivo.
+            const urlToShare = `${window.location.origin}/cherrytools/cherrypy/index.php?file=${encodeURIComponent(currentFilename)}`;
+
+
+            navigator.clipboard.writeText(urlToShare)
                     .then(() => {
-                        alert(`URL copied to clipboard.\nYou can share it now: ${urlTemp}`);
+                        alert(`URL copied to clipboard.\nYou can share it now: ${urlToShare}`);
                     })
                     .catch(err => {
                         console.error('Error copying to clipboard:', err);
-                        alert('Failed to copy filename.');
+                        alert('Failed to copy URL.');
                     });
             }
 
         window.onload = function () {
             const urlParams = new URLSearchParams(window.location.search);
-            const filename = urlParams.get('file');
+            const filenameFromUrl = urlParams.get('file');
 
-            if (filename) {
-                fetch(`python_exercises/${encodeURIComponent(filename)}`)
+            if (filenameFromUrl) {
+                // Usamos get_code.php para cargar el archivo de forma segura
+                fetch(`get_code.php?file=${encodeURIComponent(filenameFromUrl)}`)
                     .then(response => {
                         if (response.ok) {
                             return response.text(); // Get the code as text
                         } else {
-                            throw new Error('File not found');
+                            throw new Error('File not found.');
                         }
                     })
                     .then(code => {
                         editor.setValue(code); // Load the code into the editor
+                        // --- LÓGICA AÑADIDA ---
+                        currentFilename = filenameFromUrl; // Guardamos el nombre válido
+                        document.getElementById('download-button').disabled = false; // Habilitamos el botón
+                        document.getElementById('share-button').disabled = false; // Habilitamos el botón
+                        isCodeSaved = true; // <-- Valida que el código ha sido guardado.
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        alert('Error loading code.');
+                        alert('Error loading code. There is no code with this file name. Please check the file name.');
                     });
             }
         };
