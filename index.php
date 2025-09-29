@@ -9,7 +9,7 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CherryPy Code Editor</title>
+    <title>CherryPy Code Editor - GCLC</title>
     <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/simplescrollbars.css">
@@ -111,6 +111,7 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                 <button style="margin-left:10px; font-size: small; height:35px" type="button" class="run" onclick="runCode()"> <span style='font-size:15px;'>&#11208;</span> Run Code</button>
                 <button style="margin-left:10px; font-size: small; height:35px" type="button" class="clear" onclick="clearOutput()"> <span style='font-size:15px;'>&#8635;</span> Clear</button>
                 <button style="margin-left:10px; font-size: small; height:35px" type="button" class="new" onclick="newSession()"> <span style='font-size:15px;'>&#11199;</span> New Code</button>
+                <button id="my-files-button" style="font-size: small; margin-left:10px; height:35px; align-self:end; margin-bottom: 2px" type="button" class="my-files"> <span style='font-size:15px;'>&#128193;</span> My Files</button>
             </div>
         </div>
         <div class="row gx-1 justify-content-center">
@@ -618,6 +619,25 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                     })
                     .then(code => {
                         editor.setValue(code); // Load the code into the editor
+
+                        // --- LÓGICA AÑADIDA PARA RELLENAR LOS CAMPOS ---
+                        // 1. Limpiamos la extensión .py del nombre del archivo
+                        const cleanFilename = filenameFromUrl.replace('.py', '');
+                        // 2. Dividimos el nombre del archivo en sus 3 partes
+                        const parts = cleanFilename.split('_');
+
+                        // 3. Verificamos que el nombre del archivo tenga el formato esperado
+                        if (parts.length >= 3) {
+                            const course = parts[0];
+                            const exerciseName = parts[2];
+
+                            // 4. Asignamos los valores a los campos del formulario
+                            document.getElementById('course-selector').value = course;
+                            document.getElementById('exercise-name').value = exerciseName;
+                        }
+                        // --- FIN DE LA LÓGICA AÑADIDA ---
+
+
                         // --- LÓGICA AÑADIDA ---
                         currentFilename = filenameFromUrl; // Guardamos el nombre válido
                         document.getElementById('download-button').disabled = false; // Habilitamos el botón
@@ -719,7 +739,87 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
             const url = URL.createObjectURL(blob);
             window.open(`${colabUrl}&url=${url}`, '_blank');
         }*/
+
+        // --- INICIA EL CÓDIGO CORREGIDO PARA LA VENTANA MODAL "MIS ARCHIVOS" ---
+
+        // Espera a que todo el HTML de la página esté cargado antes de ejecutar el código.
+        document.addEventListener('DOMContentLoaded', (event) => {
+
+            // Obtener los elementos de la modal (ahora se hace de forma segura)
+            const modal = document.getElementById('filesModal');
+            const myFilesBtn = document.getElementById('my-files-button');
+            const closeBtn = document.querySelector('.close-button');
+            const fileListContainer = document.getElementById('fileListContainer');
+
+            // Si algún elemento no se encuentra, detenemos para evitar errores.
+            if (!modal || !myFilesBtn || !closeBtn || !fileListContainer) {
+                console.error('No se pudieron encontrar los elementos de la modal. Revisa los IDs en el HTML.');
+                return;
+            }
+
+            // Función para abrir la modal y buscar los archivos
+            myFilesBtn.onclick = function() {
+                // Mostrar un mensaje de "Cargando..."
+                fileListContainer.innerHTML = '<p>Buscando archivos...</p>';
+                modal.style.display = 'block';
+
+                // Llamada al script PHP (sin parámetros, usa la sesión)
+                fetch(`list_files.php`)
+                    .then(response => response.json())
+                    .then(files => {
+                        fileListContainer.innerHTML = ''; // Limpiar el contenedor
+                        if (files.error) {
+                            fileListContainer.innerHTML = `<p>Error: ${files.error}</p>`;
+                        } else if (files.length === 0) {
+                            fileListContainer.innerHTML = '<p>No se encontraron archivos para este estudiante.</p>';
+                        } else {
+                            const ul = document.createElement('ul');
+                            files.forEach(file => {
+                                const parts = file.split('_');
+                                const exerciseName = parts.length > 2 ? parts[2].replace('.py', '') : file;
+
+                                const li = document.createElement('li');
+                                const a = document.createElement('a');
+                                a.href = `index.php?file=${encodeURIComponent(file)}`;
+                                a.textContent = exerciseName;
+                                li.appendChild(a);
+                                ul.appendChild(li);
+                            });
+                            fileListContainer.appendChild(ul);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching files:', error);
+                        fileListContainer.innerHTML = '<p>Ocurrió un error al buscar los archivos.</p>';
+                    });
+            }
+
+            // Función para cerrar la modal al hacer clic en la 'X'
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+
+            // Función para cerrar la modal al hacer clic fuera de ella
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = 'none';
+                }
+            }
+        });
+
+        // --- TERMINA EL CÓDIGO PARA LA VENTANA MODAL ---
+
+
     </script>
+
+    <div id="filesModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>My files</h2>
+            <div id="fileListContainer">
+            </div>
+        </div>
+    </div>
 
 </body>
 </html>

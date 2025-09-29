@@ -184,4 +184,83 @@ canvas {
     /*margin-top: 0 !important;*/
 }
 
+/* Estilos para la Ventana Modal */
+.modal {
+    display: none; /* Oculta por defecto */
+    position: fixed; /* Se queda en su sitio */
+    z-index: 1000; /* Se muestra por encima de todo */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto; /* Permite scroll si es necesario */
+    background-color: rgba(0,0,0,0.6); /* Fondo negro semitransparente */
+}
+
+.modal-content {
+    background-color: #282a36 !important; /* Color de fondo similar al tema dracula */
+    color: #f8f8f2 !important;
+    margin: 15% auto; /* 15% desde arriba y centrado horizontalmente */
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.close-button {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-button:hover,
+.close-button:focus {
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#fileListContainer ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#fileListContainer li {
+    padding: 8px;
+    border-bottom: 1px solid #44475a;
+}
+
+#fileListContainer li:last-child {
+    border-bottom: none;
+}
+
+#fileListContainer a {
+    text-decoration: none;
+    color: #8be9fd; /* Un color cian brillante para los enlaces */
+    font-size: 1.1em;
+}
+
+#fileListContainer a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos para el nuevo botón "Mis Archivos" */
+button.my-files {
+    background-color: #267c7f; /* Un color púrpura/gris del tema Dracula */
+    color: white !important;
+    border: none !important;
+    padding: 5px 10px !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    /*font-family: 'Consolas', 'Menlo', monospace !important;*/
+    transition: background-color 0.3s !important;
+}
+
+button.my-files:hover {
+    background-color: #7184b8 !important; /* Un tono más claro al pasar el mouse */
+}
+
 
