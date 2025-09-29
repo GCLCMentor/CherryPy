@@ -52,8 +52,14 @@ if (!empty($mainFiles)) {
     });
 }
 
-// 6. Extraer solo los nombres de archivo de las rutas completas.
-$fileList = array_map('basename', $mainFiles);
+// 6. Crear el array final con nombre y fecha formateada.
+$fileList = [];
+foreach ($mainFiles as $file) {
+    $fileList[] = [
+        'filename' => basename($file),
+        'date' => date('d/m/Y', filemtime($file)) // Formato: día/mes/año
+    ];
+}
 
 // 7. Devolver la lista de archivos ya ordenada como una respuesta JSON.
 echo json_encode($fileList);

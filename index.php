@@ -741,7 +741,6 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
         }*/
 
         // --- INICIA EL CÓDIGO CORREGIDO PARA LA VENTANA MODAL "MIS ARCHIVOS" ---
-
         // Espera a que todo el HTML de la página esté cargado antes de ejecutar el código.
         document.addEventListener('DOMContentLoaded', (event) => {
 
@@ -774,15 +773,25 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                             fileListContainer.innerHTML = '<p>No se encontraron archivos para este estudiante.</p>';
                         } else {
                             const ul = document.createElement('ul');
-                            files.forEach(file => {
-                                const parts = file.split('_');
-                                const exerciseName = parts.length > 2 ? parts[2].replace('.py', '') : file;
+                            files.forEach(fileInfo => {
+                                const parts = fileInfo.filename.split('_');
+                                const exerciseName = parts.length > 2 ? parts[2].replace('.py', '') : fileInfo.filename;
 
                                 const li = document.createElement('li');
+
+                                // Creamos el enlace
                                 const a = document.createElement('a');
-                                a.href = `index.php?file=${encodeURIComponent(file)}`;
+                                a.href = `index.php?file=${encodeURIComponent(fileInfo.filename)}`;
                                 a.textContent = exerciseName;
+
+                                // Creamos un span para la fecha
+                                const dateSpan = document.createElement('span');
+                                dateSpan.className = 'file-date'; // Le damos una clase para darle estilo
+                                dateSpan.textContent = fileInfo.date;
+
+                                // Añadimos el enlace y la fecha al elemento de la lista
                                 li.appendChild(a);
+                                li.appendChild(dateSpan);
                                 ul.appendChild(li);
                             });
                             fileListContainer.appendChild(ul);
@@ -806,8 +815,7 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                 }
             }
         });
-
-        // --- TERMINA EL CÓDIGO PARA LA VENTANA MODAL ---
+        // --- TERMINA EL CÓDIGO PARA LA VENTANA MODAL "MIS ARCHIVOS" ---
 
 
     </script>

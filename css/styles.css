@@ -200,7 +200,7 @@ canvas {
 .modal-content {
     background-color: #282a36 !important; /* Color de fondo similar al tema dracula */
     color: #f8f8f2 !important;
-    margin: 15% auto; /* 15% desde arriba y centrado horizontalmente */
+    margin: 5% auto; /* 5% desde arriba y centrado horizontalmente */
     padding: 20px;
     border: 1px solid #888;
     width: 80%;
@@ -229,7 +229,10 @@ canvas {
 }
 
 #fileListContainer li {
-    padding: 8px;
+    display: flex; /* Habilita flexbox para alinear elementos */
+    justify-content: space-between; /* Pone espacio entre el nombre y la fecha */
+    align-items: center; /* Centra verticalmente */
+    padding: 12px 8px; /* Un poco más de espacio */
     border-bottom: 1px solid #44475a;
 }
 
@@ -245,6 +248,12 @@ canvas {
 
 #fileListContainer a:hover {
     text-decoration: underline;
+}
+
+.file-date {
+    font-size: 0.9em;
+    color: #bd93f9; /* Un color lavanda para la fecha */
+    font-style: italic;
 }
 
 /* Estilos para el nuevo botón "Mis Archivos" */
