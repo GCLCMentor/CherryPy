@@ -356,7 +356,7 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
 
             // 3. --- LÓGICA CONDICIONAL PARA TURTLE (LA PARTE NUEVA) ---
             // Revisa si el código del estudiante incluye "import turtle".
-            if (prog.includes("import turtle")) {
+            if (prog.includes("import turtle") || prog.includes("from turtle import")) {
                 // Si lo incluye, redirige la salida gráfica al lienzo de la ventana modal.
                 (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = "turtle-canvas";
                 // Y lo más importante, hace visible la ventana modal.
