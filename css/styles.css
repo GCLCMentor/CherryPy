@@ -272,4 +272,25 @@ button.my-files:hover {
     background-color: #7184b8 !important; /* Un tono más claro al pasar el mouse */
 }
 
+/* Estilos para la Ventana Modal de Turtle */
+.modal-turtle {
+    display: none; position: absolute; z-index: 1050; background-color: #fdfdfd;
+    border: 1px solid #ccc; box-shadow: 0 5px 15px rgba(0,0,0,0.3); border-radius: 8px;
+    top: 20%; left: 30%; overflow: hidden;
+}
+
+.modal-turtle .modal-header {
+    padding: 10px 15px; cursor: move; background-color: #44475a; color: white;
+    border-top-left-radius: 8px; border-top-right-radius: 8px;
+    user-select: none; height: 40px; box-sizing: border-box;
+}
+
+.modal-turtle .modal-body {
+    width: 100%; height: calc(100% - 40px); display: flex;
+    justify-content: center; align-items: center; padding: 0; box-sizing: border-box;
+}
+
+#turtle-canvas {
+    position: relative; overflow: hidden; border: 1px solid #ddd;
+}
 

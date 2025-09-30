@@ -129,7 +129,14 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                     </p>
                     <div id="output"></div>
                     <div class="divider" id="drag"></div>
-                    <div id="turtle-canvas"></div>
+                </div>
+
+                <div id="turtleModal" class="modal-turtle">
+                    <div id="turtleModalHeader" class="modal-header">
+                        &#128034; Turtle Graphics
+                        <span id="closeTurtleModal" class="close-button">&times;</span>
+                    </div>
+                    <div id="turtle-canvas" class="modal-body"></div>
                 </div>
             </div>
         </div>
@@ -277,10 +284,10 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
         let shouldStop = false; // Flag to indicate if execution should stop
 
         const editor = CodeMirror(document.getElementById('code-editor'), {
-            /*value: `# This is just an initial code snippet that can be helpful for you.\n# You can delete it to start your own project.\n\nimport turtle\n\n# Print a welcome message\nprint("Welcome to CherryPy Web Code Editor!")\n\n# Set up the screen\ns = turtle.Screen()\ns.setup(400,400) #Max dimensions 893,570\ns.bgcolor("#f8f8f8")\n\n# Set up the turtle\nt = turtle.Turtle()\nt.speed(3)  # 1:slowest, 3:slow, 5:normal, 10:fast, 0:fastest\n\n# Draw a square\nfor i in range(4):\n\tt.forward(100)\n\tt.left(90)\n\n# Finish turtle graphics\nturtle.done()`,*/
+            /*value: `# This is just an initial code snippet that can be helpful for you.\n# You can delete it to start your own project.\n\nimport turtle\n\n# Print a welcome message\nprint("Welcome to CherryPy Web Code Editor!")\n\n# Set up the screen\ns = turtle.Screen()\ns.setup(400,400)\ns.bgcolor("#f8f8f8")\n\n# Set up the turtle\nt = turtle.Turtle()\nt.speed(3)  # 1:slowest, 3:slow, 5:normal, 10:fast, 0:fastest\n\n# Draw a square\nfor i in range(4):\n\tt.forward(100)\n\tt.left(90)\n\n# Finish turtle graphics\nturtle.done()`,*/
             mode: "python",
             lineNumbers: true,
-            theme: "blackboard",
+            theme: "dracula",
             lineWrapping: true,  // Enable line wrapping
             indentUnit: 4,
             tabSize: 4,
@@ -308,7 +315,7 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
             editor.setValue('');
         } else {
             // Set default content for normal load
-            editor.setValue(`# This is just an initial code snippet that can be helpful for you.\n# You can delete it to start your own project.\n\nimport turtle\n\n# Print a welcome message\nprint("Welcome to CherryPy Web Code Editor!")\n\n# Set up the screen\ns = turtle.Screen()\ns.setup(400,400) #Max dimensions 893,570\ns.bgcolor("#f8f8f8")\n\n# Set up the turtle\nt = turtle.Turtle()\nt.speed(3)  # 1:slowest, 3:slow, 5:normal, 10:fast, 0:fastest\n\n# Draw a square\nfor i in range(4):\n\tt.forward(100)\n\tt.left(90)\n\n# Finish turtle graphics\nturtle.done()`);
+            editor.setValue(`# This is just an initial code snippet that can be helpful for you.\n# You can delete it to start your own project.\n\nimport turtle\n\n# Print a welcome message\nprint("Welcome to CherryPy Web Code Editor!")\n\n# Set up the screen\ns = turtle.Screen()\ns.setup(400,400)\ns.bgcolor("#f8f8f8")\n\n# Set up the turtle\nt = turtle.Turtle()\nt.speed(3)  # 1:slowest, 3:slow, 5:normal, 10:fast, 0:fastest\n\n# Draw a square\nfor i in range(4):\n\tt.forward(100)\n\tt.left(90)\n\n# Finish turtle graphics\nturtle.done()`);
         }
 
         /*document.getElementById('theme-selector').addEventListener('change', function () {
@@ -340,11 +347,28 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
         function runCode() {
             const prog = editor.getValue();
             const outputArea = document.getElementById("output");
-            const turtleCanvas = document.getElementById("turtle-canvas");
-            outputArea.innerHTML = '';
+            const turtleModal = document.getElementById('turtleModal'); // El div de la ventana flotante
+            const turtleCanvas = document.getElementById('turtle-canvas'); // El lienzo dentro de la ventana
 
-            Sk.pre = "output";
+            // 2. LIMPIAR SALIDAS ANTERIORES
+            outputArea.innerHTML = ""; // Limpia la consola de texto
+            if(turtleCanvas) turtleCanvas.innerHTML = ""; // Limpia el lienzo de Turtle anterior
 
+            // 3. --- LÓGICA CONDICIONAL PARA TURTLE (LA PARTE NUEVA) ---
+            // Revisa si el código del estudiante incluye "import turtle".
+            if (prog.includes("import turtle")) {
+                // Si lo incluye, redirige la salida gráfica al lienzo de la ventana modal.
+                (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = "turtle-canvas";
+                // Y lo más importante, hace visible la ventana modal.
+                turtleModal.style.display = 'block';
+            } else {
+                // Si el código NO incluye "import turtle", se asegura de que la ventana modal esté oculta.
+                turtleModal.style.display = 'none';
+            }
+
+            // 4. --- CONFIGURACIÓN DE SKULPT ---
+            // Configuración de Skulpt
+            Sk.pre = "output"; // La salida de texto va a la consola
             Sk.configure({
                 output: outf,
                 read: builtinRead,
@@ -362,8 +386,9 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                 inputfunTakesPrompt: true  // Ensure this is set to true
             });
 
-            (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = "turtle-canvas";
+            //(Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = "turtle-canvas";
 
+            // 5. --- LÓGICA DE EJECUCIÓN CON PROMESAS ---
             isRunning = true; // Set the flag to true
             shouldStop = false; // Reset the stop flag
 
@@ -747,19 +772,21 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
             // Obtener los elementos de la modal (ahora se hace de forma segura)
             const modal = document.getElementById('filesModal');
             const myFilesBtn = document.getElementById('my-files-button');
-            const closeBtn = document.querySelector('.close-button');
+
+            // Buscamos el botón de cierre específico que está DENTRO de nuestra modal.
+            const closeBtn = modal.querySelector('.close-button');
             const fileListContainer = document.getElementById('fileListContainer');
 
             // Si algún elemento no se encuentra, detenemos para evitar errores.
             if (!modal || !myFilesBtn || !closeBtn || !fileListContainer) {
-                console.error('No se pudieron encontrar los elementos de la modal. Revisa los IDs en el HTML.');
+                console.error('The modal elements could not be found. Check the IDs in the HTML.');
                 return;
             }
 
             // Función para abrir la modal y buscar los archivos
             myFilesBtn.onclick = function() {
                 // Mostrar un mensaje de "Cargando..."
-                fileListContainer.innerHTML = '<p>Buscando archivos...</p>';
+                fileListContainer.innerHTML = '<p>Searching for files...</p>';
                 modal.style.display = 'block';
 
                 // Llamada al script PHP (sin parámetros, usa la sesión)
@@ -770,7 +797,7 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                         if (files.error) {
                             fileListContainer.innerHTML = `<p>Error: ${files.error}</p>`;
                         } else if (files.length === 0) {
-                            fileListContainer.innerHTML = '<p>No se encontraron archivos para este estudiante.</p>';
+                            fileListContainer.innerHTML = '<p>No files were found for this student.</p>';
                         } else {
                             const ul = document.createElement('ul');
                             files.forEach(fileInfo => {
@@ -799,7 +826,7 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                     })
                     .catch(error => {
                         console.error('Error fetching files:', error);
-                        fileListContainer.innerHTML = '<p>Ocurrió un error al buscar los archivos.</p>';
+                        fileListContainer.innerHTML = '<p>An error occurred while searching for the files.</p>';
                     });
             }
 
@@ -817,6 +844,60 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
         });
         // --- TERMINA EL CÓDIGO PARA LA VENTANA MODAL "MIS ARCHIVOS" ---
 
+        // --- CÓDIGO PARA LA FUNCIONALIDAD DE LA VENTANA TURTLE ---
+        // Espera a que la página cargue para añadir los eventos de forma segura
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const turtleModal = document.getElementById("turtleModal");
+            const closeButton = document.getElementById('closeTurtleModal');
+
+            if (turtleModal && closeButton) {
+                // Hacemos que la ventana sea arrastrable
+                dragElement(turtleModal);
+                // Añadimos el evento para el botón de cerrar
+                closeButton.onclick = function() {
+                    turtleModal.style.display = 'none';
+                };
+            }
+        });
+
+        function dragElement(elmnt) {
+            var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            const header = document.getElementById(elmnt.id + "Header");
+
+            if (header) {
+                // Arrastrar desde la cabecera
+                header.onmousedown = dragMouseDown;
+            } else {
+                // Arrastrar desde cualquier parte
+                elmnt.onmousedown = dragMouseDown;
+            }
+
+            function dragMouseDown(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e = e || window.event;
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+                elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+        // --- TERMINA EL CÓDIGO PARA LA VENTANA MODAL "TURTLE" ---
 
     </script>
 
