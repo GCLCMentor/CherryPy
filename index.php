@@ -128,7 +128,11 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                         Output
                     </p>
                     <div id="output"></div>
-                    <div class="divider" id="drag"></div>
+                    <div id="input-container" style="display: none;">
+                        <input type="text" id="user-input-field" placeholder="Type here and press Enter......">
+                        <button style="font-size: 13px; margin-left:10px; height:35px; align-self:end; margin-bottom: 2px" type="button" id="submit-input-button">Enter</button>
+                    </div>
+                    <div id="drag"></div>
                 </div>
 
                 <div id="turtleModal" class="modal-turtle">
@@ -210,7 +214,7 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                     <option value="yonce">yonce</option>
                     <option value="zenburn">zenburn</option>
                 </select>-->
-                <img class=image src="images/logo_cerezos_white.png" alt="Gimnasio Campestre Los Cerezos" width="55px" height="67px"><p style="font-family:Lato, Helvetica Neue, Helvetica, Arial, sans-serif; font-size: small; font-weight:lighter; flex:1; flex-direction:row; display:flex; justify-content:flex-start; padding:20px 0 0 20px; margin:10px 0 0 0; color: white ">Gimnasio Campestre Los Cerezos - 2024<br>Powered by Mr. Santos M. - Coding Area</p>
+                <img class=image src="images/logo_cerezos_white.png" alt="Gimnasio Campestre Los Cerezos" width="55px" height="67px"><p style="font-family:Lato, Helvetica Neue, Helvetica, Arial, sans-serif; font-size: small; font-weight:lighter; flex:1; flex-direction:row; display:flex; justify-content:flex-start; padding:20px 0 0 20px; margin:10px 0 0 0; color: white ">Gimnasio Campestre Los Cerezos - 2024-2025<br>Powered by Mr. Santos M. - Coding Area Teacher</p>
                 <div class="col-md-2" style="flex:1; flex-direction:row; display:flex; justify-content:flex-end; padding: 20px 0 0 20px">
                     <button style="margin-left:10px; height:35px; font-size: small" type="button" class="colab" onclick="redirectColab()"> <svg width="24" height="24" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg"><path d=" M 665 375C 633 375 602 388 579 411C 556 434 543 465 543 498C 543 530 556 561 579 584C 602 607 633 620 665 620C 698 620 729 607 752 584C 775 561 788 530 788 498C 788 430 733 375 665 375C 665 375 665 375 665 375M 338 261C 390 261 440 278 481 310C 481 310 424 411 424 411C 401 388 370 375 338 375C 305 375 274 388 251 411C 228 434 215 465 215 498C 215 530 228 561 251 584C 274 607 305 620 338 620C 369 620 399 608 422 587C 422 587 480 686 480 686C 439 717 389 734 338 734C 275 734 215 709 171 665C 126 620 101 560 101 498C 101 367 207 261 338 261C 338 261 338 261 338 261M 665 261C 796 261 902 367 902 498C 902 628 796 734 665 734C 603 734 543 709 498 665C 454 620 429 560 429 498C 429 367 535 261 665 261C 665 261 665 261 665 261"/></svg> Google Colab</button>
                 </div>
@@ -350,11 +354,16 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
             const turtleModal = document.getElementById('turtleModal'); // El div de la ventana flotante
             const turtleCanvas = document.getElementById('turtle-canvas'); // El lienzo dentro de la ventana
 
+            // --- ELEMENTOS PARA EL NUEVO INPUT ---
+            const inputContainer = document.getElementById('input-container');
+            const inputField = document.getElementById('user-input-field');
+            const submitButton = document.getElementById('submit-input-button');
+
             // 2. LIMPIAR SALIDAS ANTERIORES
             outputArea.innerHTML = ""; // Limpia la consola de texto
             if(turtleCanvas) turtleCanvas.innerHTML = ""; // Limpia el lienzo de Turtle anterior
 
-            // 3. --- LÓGICA CONDICIONAL PARA TURTLE (LA PARTE NUEVA) ---
+            // 3. --- LÓGICA CONDICIONAL PARA TURTLE (NO SE CAMBIA) ---
             // Revisa si el código del estudiante incluye "import turtle".
             if (prog.includes("import turtle") || prog.includes("from turtle import")) {
                 // Si lo incluye, redirige la salida gráfica al lienzo de la ventana modal.
@@ -366,29 +375,58 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                 turtleModal.style.display = 'none';
             }
 
-            // 4. --- CONFIGURACIÓN DE SKULPT ---
-            // Configuración de Skulpt
-            Sk.pre = "output"; // La salida de texto va a la consola
+            // 4. --- CONFIGURACIÓN DE SKULPT (CON EL NUEVO INPUTFUN) ---
+            Sk.pre = "output";
             Sk.configure({
                 output: outf,
                 read: builtinRead,
+                // --- INICIO DE LA NUEVA LÓGICA DE INPUT ---
                 inputfun: function (prompt) {
-                    return new Promise((resolve) => {
+                    return new Promise((resolve, reject) => {
+                        // Muestra el prompt (ej: "Escribe tu nombre: ") en la consola
                         outputArea.innerHTML += prompt;
-                        setTimeout(() => {
-                            const inputCallback = resolve;
-                            const userInput = window.prompt(prompt);
+
+                        // Muestra el campo de texto y el botón
+                        inputContainer.style.display = 'flex';
+                        inputField.focus();
+
+                        // Función que se ejecutará cuando el usuario envíe su respuesta
+                        const submitHandler = () => {
+                            const userInput = inputField.value;
+
+                            // Muestra la respuesta del usuario en la consola
                             outputArea.innerHTML += userInput + '<br>';
+
+                            // Limpia y oculta el campo de texto
+                            inputField.value = '';
+                            inputContainer.style.display = 'none';
+
+                            // Elimina los "oyentes" para que no se acumulen
+                            submitButton.removeEventListener('click', submitHandler);
+                            inputField.removeEventListener('keydown', keydownHandler);
+
+                            // Resuelve la promesa, devolviendo la respuesta a Skulpt
                             resolve(userInput);
-                        }, 0);
+                        };
+
+                        // Función para detectar la tecla "Enter"
+                        const keydownHandler = (event) => {
+                            if (event.key === "Enter") {
+                                event.preventDefault(); // Evita el comportamiento por defecto de la tecla Enter
+                                submitHandler();
+                            }
+                        };
+
+                        // Asigna los "oyentes" de eventos
+                        submitButton.addEventListener('click', submitHandler);
+                        inputField.addEventListener('keydown', keydownHandler);
                     });
                 },
+                // --- FIN DE LA NUEVA LÓGICA DE INPUT ---
                 inputfunTakesPrompt: true  // Ensure this is set to true
             });
 
-            //(Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = "turtle-canvas";
-
-            // 5. --- LÓGICA DE EJECUCIÓN CON PROMESAS ---
+            // 5. --- LÓGICA DE EJECUCIÓN CON PROMESAS (NO SE CAMBIA) ---
             isRunning = true; // Set the flag to true
             shouldStop = false; // Reset the stop flag
 
@@ -420,12 +458,19 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
         }
 
         function clearOutput() {
+            // Limpia la consola y la ventana turtle
             const outputArea = document.getElementById("output");
             const turtleCanvas = document.getElementById("turtle-canvas");
 
             // Clear the content of the output and turtle canvas
             outputArea.innerHTML = '';
             turtleCanvas.innerHTML = '';
+
+            // Busca el contenedor del input y lo oculta.
+            const inputContainer = document.getElementById('input-container');
+            if (inputContainer) {
+                inputContainer.style.display = 'none';
+            }
         }
 
         function stopExecution() {
@@ -686,6 +731,12 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
 
                 // Clear the output and turtle canvas
                 clearOutput();
+
+                // Oculta el contenedor del input si está visible.
+                const inputContainer = document.getElementById('input-container');
+                if (inputContainer) {
+                    inputContainer.style.display = 'none';
+                }
 
                 // Redirigir a la página principal sin parámetros
                 const baseUrl = `${window.location.origin}/cherrytools/cherrypy/index.php?new_session=true`;

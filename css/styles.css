@@ -294,3 +294,40 @@ button.my-files:hover {
     position: relative; overflow: hidden; border: 1px solid #ddd;
 }
 
+/* --- Estilos para el Input Integrado en la Consola --- */
+#input-container {
+    display: flex; /* Usamos flexbox para alinear el campo y el botón */
+    margin-top: 10px;
+    border-top: 1px solid #44475a;
+    padding-top: 10px;
+}
+
+#user-input-field {
+    flex-grow: 1; /* Hace que el campo de texto ocupe todo el espacio disponible */
+    background-color: #2e3b4e;
+    color: #ededed !important;
+    border: 1px solid #888888;
+    padding: 6px;
+    /*border-radius: 5px;*/
+    outline: none; /* Quita el borde azul al hacer foco */
+    font-family: 'Consolas', 'Menlo', monospace;
+    font-size: 14px;
+    height: 42px;
+}
+
+#submit-input-button {
+    background-color: #4CAF50; /* Mismo color que el botón "Run" */
+    color: #282a36;
+    border: none;
+    padding: 8px 15px;
+    margin-left: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#submit-input-button:hover {
+    background-color: #4CAF50;
+}
+
