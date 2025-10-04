@@ -250,6 +250,33 @@ canvas {
     text-decoration: underline;
 }
 
+#teacherFileListContainer ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#teacherFileListContainer li {
+    display: flex; /* Habilita flexbox para alinear elementos */
+    justify-content: space-between; /* Pone espacio entre el nombre y la fecha */
+    align-items: center; /* Centra verticalmente */
+    padding: 12px 8px; /* Un poco más de espacio */
+    border-bottom: 1px solid #44475a;
+}
+
+#teacherFileListContainer li:last-child {
+    border-bottom: none;
+}
+
+#teacherFileListContainer a {
+    text-decoration: none;
+    color: #8be9fd; /* Un color cian brillante para los enlaces */
+    font-size: 1.1em;
+}
+
+#teacherFileListContainer a:hover {
+    text-decoration: underline;
+}
+
 .file-date {
     font-size: 0.9em;
     color: #bd93f9; /* Un color lavanda para la fecha */
@@ -331,3 +358,59 @@ button.my-files:hover {
     background-color: #4CAF50;
 }
 
+/* Estilo para los nombres de estudiantes en el panel del docente */
+#teacherFileListContainer h3 {
+    color: #50fa7b; /* Verde del tema Dracula */
+    margin-top: 20px;
+    margin-bottom: 5px;
+    border-bottom: 1px solid #44475a;
+    padding-bottom: 5px;
+    font-size: 1.2em;
+}
+
+#teacherFileListContainer h3:first-child {
+    margin-top: 0;
+}
+
+button.teacher-dashboard-button {
+    background-color: #ffb86c; /* Un color púrpura/gris del tema Dracula */
+    color: black !important;
+    border: none !important;
+    padding: 5px 10px !important;
+    border-radius: 5px !important;
+    cursor: pointer !important;
+    /*font-family: 'Consolas', 'Menlo', monospace !important;*/
+    transition: background-color 0.3s !important;
+}
+
+button.teacher-dashboard-button:hover {
+    background-color: #7184b8 !important; /* Un tono más claro al pasar el mouse */
+}
+
+/* --- ESTILOS PARA LA LISTA DESPLEGABLE DEL DOCENTE --- */
+
+/* Estilo para el nombre del estudiante (lo hace parecer un botón) */
+.student-toggle {
+    color: #50fa7b; /* Verde del tema */
+    background-color: #44475a; /* Fondo oscuro del tema */
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    font-size: 1.1em;
+    user-select: none; /* Evita que el texto se seleccione al hacer clic */
+}
+
+.student-toggle:hover {
+    background-color: #6272a4; /* Un poco más claro al pasar el mouse */
+}
+
+/* Las listas de archivos de los estudiantes estarán ocultas por defecto */
+.student-file-list {
+    display: none;
+    list-style-type: none;
+    padding: 0;
+    margin-left: 15px; /* Una pequeña sangría para que se vea anidado */
+    border-left: 2px solid #44475a;
+}

@@ -89,6 +89,11 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
 </head>
 
 <body>
+<!-- <div style="background-color: #ffb86c; color: #282a36; padding: 10px; border-radius: 5px; margin: 10px; font-family: monospace; z-index: 9999; position: relative;">
+    <strong>DEBUGGING INFO:</strong><br>
+    <pre><?php print_r($_SESSION); ?></pre>
+</div> -->
+<div class="main-container">
     <div class="container-fluid">
         <div class="row gx-1 justify-content-center">
             <div class="col-md-6" style="flex:1; flex-direction:column; display:flex; justify-content:flex-end; padding-right:20px">
@@ -112,6 +117,11 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                 <button style="margin-left:10px; font-size: small; height:35px" type="button" class="clear" onclick="clearOutput()"> <span style='font-size:15px;'>&#8635;</span> Clear</button>
                 <button style="margin-left:10px; font-size: small; height:35px" type="button" class="new" onclick="newSession()"> <span style='font-size:15px;'>&#11199;</span> New Code</button>
                 <button id="my-files-button" style="font-size: small; margin-left:10px; height:35px; align-self:end; margin-bottom: 2px" type="button" class="my-files"> <span style='font-size:15px;'>&#128193;</span> My Files</button>
+                <?php if (isset($_SESSION['user']) && strtolower($_SESSION['user']) == 'smartinezm@gimnasioloscerezos.edu.co'): ?>
+                    <button id="teacher-dashboard-button" style="font-size: small; margin-left:10px; height:35px; align-self:end; margin-bottom: 2px" type="button" class="my-files">
+                        <span style='font-size:15px;'>&#128270;</span> Teacher Panel
+                    </button>
+                <?php endif; ?>
             </div>
         </div>
         <div class="row gx-1 justify-content-center">
@@ -258,6 +268,11 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
     </div>
 
     <script>
+    // Esta constante global le dirá a nuestro JavaScript si el usuario actual es el docente.
+    const IS_TEACHER = <?php echo (isset($_SESSION['user']) && strtolower($_SESSION['user']) == 'smartinezm@gimnasioloscerezos.edu.co') ? 'true' : 'false'; ?>;
+    </script>
+
+    <script>
         const drag = document.getElementById('drag');
         const output = document.getElementById('output');
         const turtleCanvas = document.getElementById('turtle-canvas');
@@ -319,7 +334,7 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
             editor.setValue('');
         } else {
             // Set default content for normal load
-            editor.setValue(`# This is just an initial code snippet that can be helpful for you.\n# You can delete it to start your own project.\n\nimport turtle\n\n# Print a welcome message\nprint("Welcome to CherryPy Web Code Editor!")\n\n# Set up the screen\ns = turtle.Screen()\ns.setup(400,400)\ns.bgcolor("#f8f8f8")\n\n# Set up the turtle\nt = turtle.Turtle()\nt.speed(3)  # 1:slowest, 3:slow, 5:normal, 10:fast, 0:fastest\n\n# Draw a square\nfor i in range(4):\n\tt.forward(100)\n\tt.left(90)\n\n# Finish turtle graphics\nturtle.done()`);
+            editor.setValue(`# Welcome! This sample code demonstrates a basic Turtle graphics drawing. Feel free to experiment with it or replace it with your own code to get started.\n\nimport turtle\n\n# Print a welcome message\nprint("Welcome to CherryPy Web Code Editor!")\n\n# Set up the screen\ns = turtle.Screen()\ns.setup(400,400)\ns.bgcolor("#f8f8f8")\n\n# Set up the turtle\nt = turtle.Turtle()\nt.speed(3)  # 1:slowest, 3:slow, 5:normal, 10:fast, 0:fastest\n\n# Draw a square\nfor i in range(4):\n\tt.forward(100)\n\tt.left(90)\n\n# Finish turtle graphics\nturtle.done()`);
         }
 
         /*document.getElementById('theme-selector').addEventListener('change', function () {
@@ -699,11 +714,20 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
                         // 3. Verificamos que el nombre del archivo tenga el formato esperado
                         if (parts.length >= 3) {
                             const course = parts[0];
+                            const studentNameFromFile = parts[1]; // Obtenemos el nombre del estudiante del archivo
                             const exerciseName = parts[2];
 
                             // 4. Asignamos los valores a los campos del formulario
                             document.getElementById('course-selector').value = course;
                             document.getElementById('exercise-name').value = exerciseName;
+
+                            // --- ¡LÓGICA CONDICIONAL AÑADIDA! ---
+                            // Solo si el usuario es el docente, actualizamos el campo con el nombre del estudiante del archivo.
+                            // Si un estudiante abre su propio archivo, su nombre (de la sesión) se mantiene intacto.
+                            if (IS_TEACHER) {
+                                document.getElementById('student-name').value = studentNameFromFile.replace(/-/g, ' ');
+                            }
+
                         }
                         // --- FIN DE LA LÓGICA AÑADIDA ---
 
@@ -950,6 +974,85 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
         }
         // --- TERMINA EL CÓDIGO PARA LA VENTANA MODAL "TURTLE" ---
 
+        // --- CÓDIGO PARA LA VENTANA MODAL DEL DOCENTE (VERSIÓN DESPLEGABLE) ---
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const teacherButton = document.getElementById('teacher-dashboard-button');
+            if (!teacherButton) return;
+
+            const modal = document.getElementById('teacherFilesModal');
+            const closeBtn = modal.querySelector('.close-button');
+            const fileListContainer = document.getElementById('teacherFileListContainer');
+
+            teacherButton.onclick = function() {
+                fileListContainer.innerHTML = '<p>Loading all student files...</p>';
+                modal.style.display = 'block';
+
+                fetch('list_all_files.php')
+                    .then(response => response.json())
+                    .then(data => {
+                        fileListContainer.innerHTML = '';
+                        if (data.error) {
+                            fileListContainer.innerHTML = `<p>Error: ${data.error}</p>`;
+                            return;
+                        }
+
+                        // --- INICIO DE LA NUEVA LÓGICA DESPLEGABLE ---
+                        for (const studentName in data) {
+                            // 1. Crea el encabezado clicable para el estudiante
+                            const studentHeader = document.createElement('div');
+                            studentHeader.className = 'student-toggle';
+                            studentHeader.textContent = studentName.replace(/-/g, ' ');
+                            fileListContainer.appendChild(studentHeader);
+
+                            // 2. Crea la lista de archivos (oculta por defecto)
+                            const ul = document.createElement('ul');
+                            ul.className = 'student-file-list'; // Le damos la clase para que esté oculta
+
+                            data[studentName].forEach(fileInfo => {
+                                const exerciseName = fileInfo.filename.split('_')[2]?.replace('.py', '') || fileInfo.filename;
+                                const li = document.createElement('li');
+                                const a = document.createElement('a');
+                                a.href = `index.php?file=${encodeURIComponent(fileInfo.filename)}`;
+                                a.textContent = exerciseName;
+                                const dateSpan = document.createElement('span');
+                                dateSpan.className = 'file-date';
+                                dateSpan.textContent = fileInfo.date;
+                                li.appendChild(a);
+                                li.appendChild(dateSpan);
+                                ul.appendChild(li);
+                            });
+                            fileListContainer.appendChild(ul);
+
+                            // 3. Añade el evento de clic al encabezado
+                            studentHeader.addEventListener('click', function() {
+                                const fileList = this.nextElementSibling; // La lista <ul> es el siguiente elemento
+
+                                // Si la lista ya está visible, la ocultamos
+                                if (fileList.style.display === 'block') {
+                                    fileList.style.display = 'none';
+                                } else {
+                                    // Si no, ocultamos todas las demás listas antes de mostrar esta
+                                    document.querySelectorAll('.student-file-list').forEach(list => {
+                                        list.style.display = 'none';
+                                    });
+                                    fileList.style.display = 'block';
+                                }
+                            });
+                        }
+                        // --- FIN DE LA NUEVA LÓGICA DESPLEGABLE ---
+                    })
+                    .catch(error => {
+                        console.error('Error fetching student files:', error);
+                        fileListContainer.innerHTML = '<p>An error occurred while fetching files.</p>';
+                    });
+            }
+
+            closeBtn.onclick = function() { modal.style.display = 'none'; }
+            window.onclick = function(event) { if (event.target == modal) modal.style.display = 'none'; }
+        });
+        // --- TERMINA EL CÓDIGO PARA LA VENTANA MODAL DEL DOCENTE ---
+
+
     </script>
 
     <div id="filesModal" class="modal">
@@ -958,6 +1061,14 @@ $userName = isset($_SESSION['name']) ? $_SESSION['name'] : 'Guest';
             <h2>My files</h2>
             <div id="fileListContainer">
             </div>
+        </div>
+    </div>
+
+    <div id="teacherFilesModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>All Student Files</h2>
+            <div id="teacherFileListContainer"></div>
         </div>
     </div>
 
